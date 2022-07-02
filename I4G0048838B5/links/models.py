@@ -1,14 +1,15 @@
+from . import utils
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from django.urls import reverse
 from django.template.defaultfilters import slugify
+
 # Create your models here.
 
 
 class Link(models.Model):
 
-    target = models.URLField(max_length=200)
+    target_url = models.URLField(max_length=200)
     description = models.CharField(max_length=200)
     identifier = models.SlugField(max_length=20, unique=True, blank=True)
     author = models.ForeignKey(
@@ -19,11 +20,17 @@ class Link(models.Model):
     active = models.BooleanField(default=True)
 
     def save(self, *args, **kwargs):
-        self.slug = slugify(self.title)
+        if not self.identifier:
+            random_id = utils.generate_random_id()
+
+            while Link.objects.filter(identifier=random_id).exists:
+                random_id = utils.generate_random_id()
+            
+            self.identifier = random_id
+
         super().save(*args, **kwargs)
-        pass 
 
     def __str__(self):
-        return self.title
+        return f"{self.identifier}"
     
     
